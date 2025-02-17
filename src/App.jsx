@@ -66,37 +66,76 @@ const App = () => {
 
   useEffect(() => {
     let timer;
-  
+    let audio;
+
+    const playAlertSound = () => {
+      audio = new Audio("/sounds/alert.mp3");
+      audio.loop = true;
+      audio.play();
+    };
+
+    const stopAlertSound = () => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    };
+
+    const showNotification = () => {
+      if (Notification.permission === "granted") {
+        new Notification("Alerta de tiempo", {
+          body: "Han pasado 30 segundos.",
+          requireInteraction: true,
+        }).onclick = () => {
+          stopAlertSound();
+        };
+      }
+    };
+
+    const handleAlert = () => {
+      playAlertSound();
+      showNotification();
+      setTimeout(() => {
+        alert("Han pasado 30 segundos.");
+        stopAlertSound();
+        setIsActive(true); // Asegurar que sigue activo después de la alerta
+        setIsPaused(false); // Evitar que entre en pausa
+      }, 500);
+    };
+
     if (isTracking) {
-      clearInterval(timer); // Limpia cualquier intervalo previo
-  
-      if (isActive && !isPaused) {
-        timer = setInterval(() => {
+      timer = setInterval(() => {
+        if (isActive && !isPaused) {
           setActiveTime((prev) => {
             const newTime = prev + 1;
             localStorage.setItem("activeTime", newTime);
+            if (newTime === 30) {
+              handleAlert();
+            }
             return newTime;
           });
-        }, 1000);
-      } else if (!isActive && isPaused) {
-        timer = setInterval(() => {
+        } else if (!isActive && isPaused) {
           setInactiveTime((prev) => {
             const newTime = prev + 1;
             localStorage.setItem("inactiveTime", newTime);
             return newTime;
           });
-        }, 1000);
-      }
+        }
+      }, 1000);
     }
-  
+
     return () => {
-      clearInterval(timer); // Asegura que el intervalo se limpia antes de crear uno nuevo
+      clearInterval(timer); // Limpia el intervalo antes de crear uno nuevo
+      stopAlertSound(); // Detiene el sonido de alerta si está sonando
     };
   }, [isActive, isTracking, isPaused]);
-  
-  
-  
 
+  // Solicitar permiso para mostrar notificaciones
+  useEffect(() => {
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  }, []);
 
   useEffect(() => {
     const savedRecords = localStorage.getItem("records");
@@ -183,6 +222,14 @@ const App = () => {
     });
 
     let userComment = prompt("¿Qué comentario deseas guardar?");
+    if (userComment === null) {
+      // Si el usuario cancela, reanudar el tiempo
+      setIsActive(true);
+      setIsTracking(true);
+      setIsPaused(false);
+      return;
+    }
+
     while (userComment && (/[^a-zA-Z\s]/.test(userComment) || userComment.length > 40)) {
       alert("El comentario solo puede contener letras y espacios, y debe tener un máximo de 40 caracteres.");
       userComment = prompt("¿Qué comentario deseas guardar?");
@@ -277,7 +324,7 @@ const App = () => {
       setIsPaused(false); // Evitar que entre en pausa
     }, 500);
   };
-  useEffect(() => {
+  (() => {
     let timer;
     if (isTracking) {
       if (isActive && !isPaused) {
@@ -305,7 +352,7 @@ const App = () => {
   
   // Función para generar el PDF del proyecto
   const handleDownload = useCallback(async () => {
-    if (records.length === 0) {
+    if (records.length =useEffect== 0) {
       alert("No hay registros capturados para convertir a PDF.");
       return;
     }
