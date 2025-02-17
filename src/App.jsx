@@ -216,27 +216,26 @@ const App = () => {
     setIsActive(false);
     setIsTracking(false);
     setIsPaused(false);
-
+  
     const endTimeValue = new Date().toLocaleTimeString("en-US", {
       hour12: false,
     });
-
+  
     let userComment = prompt("¿Qué comentario deseas guardar?");
-    if (userComment === null) {
-      // Si el usuario cancela, reanudar el tiempo
-      setIsActive(true);
-      setIsTracking(true);
-      setIsPaused(false);
-      return;
-    }
-
-    while (userComment && (/[^a-zA-Z\s]/.test(userComment) || userComment.length > 40)) {
+    while (userComment === null || userComment.trim() === "" || /[^a-zA-Z\s]/.test(userComment) || userComment.length > 40) {
+      if (userComment === null) {
+        // Si el usuario cancela, reanudar el tiempo
+        setIsActive(true);
+        setIsTracking(true);
+        setIsPaused(false);
+        return;
+      }
       alert("El comentario solo puede contener letras y espacios, y debe tener un máximo de 40 caracteres.");
       userComment = prompt("¿Qué comentario deseas guardar?");
     }
-
+  
     const date = new Date().toLocaleDateString();
-
+  
     const newRecords = [
       ...records,
       {
@@ -249,10 +248,10 @@ const App = () => {
         comment: userComment || "",
       },
     ];
-
+  
     setRecords(newRecords);
     localStorage.setItem("records", JSON.stringify(newRecords));
-
+  
     // Reiniciar estados
     setActiveTime(0);
     setInactiveTime(0);
@@ -266,6 +265,7 @@ const App = () => {
     localStorage.removeItem("isActive");
     localStorage.removeItem("activity");
   };
+  
 
   const handleSave = () => {
     if (records.length === 0) {
@@ -352,7 +352,7 @@ const App = () => {
   
   // Función para generar el PDF del proyecto
   const handleDownload = useCallback(async () => {
-    if (records.length =useEffect== 0) {
+    if (records.length == 0) {
       alert("No hay registros capturados para convertir a PDF.");
       return;
     }
