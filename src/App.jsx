@@ -588,37 +588,39 @@ const App = () => {
           </div>
         )}
 
-<div className="w-full max-w-3xl bg-gray-800 bg-opacity-75 p-4 rounded-lg shadow-lg overflow-x-auto">
-            <h3 className="text-xl font-bold text-green-500 mb-4">
-              Registros de Actividad
-            </h3>
-            <table className="min-w-full table-auto text-white">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2">Fecha</th>
-                  <th className="px-4 py-2">Inicio</th>
-                  <th className="px-4 py-2">Fin</th>
-                  <th className="px-4 py-2">Interrupción</th>
-                  <th className="px-4 py-2">A tiempo</th>
-                  <th className="px-4 py-2">Actividad</th>
-                  <th className="px-4 py-2">Comentario</th>
-                </tr>
-              </thead>
-              <tbody>
-                {records.map((record, index) => (
-                  <tr key={index} className="text-center">
-                    <td className="border px-4 py-2">{record.date}</td>
-                    <td className="border px-4 py-2">{record.startTime}</td>
-                    <td className="border px-4 py-2">{record.endTime}</td>
-                    <td className="border px-4 py-2">{formatTime(record.inactiveTime)}</td>
-                    <td className="border px-4 py-2">{formatTime(record.activeTime)}</td>
-                    <td className="border px-4 py-2">{record.activity}</td>
-                    <td className="border px-4 py-2 whitespace-pre-line">{record.comment}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+<div className="w-full max-w-5xl mx-auto bg-gray-800 bg-opacity-75 p-4 rounded-lg shadow-lg overflow-x-auto">
+  <h3 className="text-xl font-bold text-green-500 mb-4">Registros de Actividad</h3>
+  <div className="overflow-x-auto">
+    <table className="w-full min-w-full table-auto text-white border-collapse">
+      <thead>
+        <tr>
+          <th className="px-4 py-2 border">Fecha</th>
+          <th className="px-4 py-2 border">Inicio</th>
+          <th className="px-4 py-2 border">Fin</th>
+          <th className="px-4 py-2 border">Interrupción</th>
+          <th className="px-4 py-2 border">A tiempo</th>
+          <th className="px-4 py-2 border">Actividad</th>
+          <th className="px-4 py-2 border">Comentario</th>
+        </tr>
+      </thead>
+      <tbody>
+        {records.map((record, index) => (
+          <tr key={index} className="text-center">
+            <td className="border px-4 py-2">{record.date}</td>
+            <td className="border px-4 py-2">{record.startTime}</td>
+            <td className="border px-4 py-2">{record.endTime}</td>
+            <td className="border px-4 py-2">{formatTime(record.inactiveTime)}</td>
+            <td className="border px-4 py-2">{formatTime(record.activeTime)}</td>
+            <td className="border px-4 py-2">{record.activity}</td>
+            <td className="border px-4 py-2 whitespace-pre-line">{record.comment}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
       </div>
     </div>
   );
