@@ -305,6 +305,11 @@ const App = () => {
   
   // Función para generar el PDF del proyecto
   const handleDownload = useCallback(async () => {
+    if (records.length === 0) {
+      alert("No hay registros capturados para convertir a PDF.");
+      return;
+    }
+  
     try {
       const fileName = prompt("¿Cómo deseas nombrar el archivo PDF?");
       if (!fileName) {
