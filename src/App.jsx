@@ -8,9 +8,9 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import html2canvas from "html2canvas";
 import { Chart } from "chart.js";
+import Defectos from "./defectos"; // Importar el componente Defectos
 
 const App = () => {
-  
   const [mexicoTime, setMexicoTime] = useState(null);
   const [systemTime, setSystemTime] = useState(null);
   const [activeTime, setActiveTime] = useState(0);
@@ -25,6 +25,8 @@ const App = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [hasRecovered, setHasRecovered] = useState(false);
   const [showCharts, setShowCharts] = useState(false);
+  const [showDefectos, setShowDefectos] = useState(false); // Estado para mostrar el componente Defectos
+  const [composturaTime, setComposturaTime] = useState(0); // Estado para el tiempo de compostura
 
   const activities = [
     "Analizar",
@@ -36,6 +38,7 @@ const App = () => {
     "Lanzamiento",
     "Diagramar",
     "Reunión",
+    "Postmortem",
   ];
 
   useEffect(() => {
@@ -483,6 +486,14 @@ const App = () => {
   }, [records]);
   
 
+  const startComposturaTimer = () => {
+    setComposturaTime(0);
+    const timer = setInterval(() => {
+      setComposturaTime((prevTime) => prevTime + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  };
+
   return (
     <div className="relative min-h-screen bg-gray-900 text-white">
       <Velustro className="fixed top-0 left-0 w-full h-full z-0" />
@@ -567,6 +578,15 @@ const App = () => {
               >
                 Borrar Datos
               </button>
+              <button
+                onClick={() => {
+                  setShowDefectos(true);
+                  startComposturaTimer();
+                }}
+                className="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600"
+              >
+                Registrar Defecto
+              </button>
             </div>
           </div>
         </div>
@@ -620,7 +640,7 @@ const App = () => {
   </div>
 </div>
 
-
+        {showDefectos && <Defectos onClose={() => setShowDefectos(false)} activity={activity} composturaTime={composturaTime} />}
       </div>
     </div>
   );
