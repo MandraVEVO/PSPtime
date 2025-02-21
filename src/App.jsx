@@ -9,6 +9,7 @@ import "jspdf-autotable";
 import html2canvas from "html2canvas";
 import { Chart } from "chart.js";
 import Defectos from "./defectos"; // Importar el componente Defectos
+import Swal from 'sweetalert2';
 
 const App = () => {
   const [mexicoTime, setMexicoTime] = useState(null);
@@ -45,11 +46,11 @@ const App = () => {
     const fetchMexicoTime = async () => {
       try {
         const response = await fetch(
-          "http://worldtimeapi.org/api/timezone/America/Mexico_City"
+          "https://timeapi.io/api/Time/current/zone?timeZone=America/Mexico_City"
         );
         const data = await response.json();
         setMexicoTime(
-          new Date(data.datetime).toLocaleTimeString("en-US", { hour12: false })
+          new Date(data.dateTime).toLocaleTimeString("en-US", { hour12: false })
         );
       } catch (error) {
         console.error("Error al obtener la hora:", error);
@@ -69,22 +70,40 @@ const App = () => {
 
   useEffect(() => {
     let timer;
-    let audio;
-
-    const playAlertSound = () => {
+    let audio = null;
+  
+    const startAlertSound = () => {
       audio = new Audio("/sounds/alert.mp3");
       audio.loop = true;
       audio.play();
     };
-
+  
     const stopAlertSound = () => {
       if (audio) {
+        audio.loop = false;
         audio.pause();
         audio.currentTime = 0;
+        audio = null;
       }
     };
-
-    const showNotification = () => {
+  
+    const handleAlert = () => {
+      // Inicia el sonido de alerta
+      startAlertSound();
+      // Lanza la alerta con SweetAlert2
+      Swal.fire({
+        title: 'Alerta de tiempo',
+        text: 'Han pasado 30 segundos.',
+        icon: 'warning',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        confirmButtonText: 'Aceptar',
+        didClose: () => {
+          stopAlertSound();
+        }
+      });
+  
       if (Notification.permission === "granted") {
         new Notification("Alerta de tiempo", {
           body: "Han pasado 30 segundos.",
@@ -94,18 +113,7 @@ const App = () => {
         };
       }
     };
-
-    const handleAlert = () => {
-      playAlertSound();
-      showNotification();
-      setTimeout(() => {
-        alert("Han pasado 30 segundos.");
-        stopAlertSound();
-        setIsActive(true); // Asegurar que sigue activo después de la alerta
-        setIsPaused(false); // Evitar que entre en pausa
-      }, 500);
-    };
-
+  
     if (isTracking) {
       timer = setInterval(() => {
         if (isActive && !isPaused) {
@@ -126,19 +134,16 @@ const App = () => {
         }
       }, 1000);
     }
-
+  
     return () => {
-      clearInterval(timer); // Limpia el intervalo antes de crear uno nuevo
-      stopAlertSound(); // Detiene el sonido de alerta si está sonando
+      clearInterval(timer);
+      stopAlertSound();
     };
   }, [isActive, isTracking, isPaused]);
+  
 
-  // Solicitar permiso para mostrar notificaciones
-  useEffect(() => {
-    if (Notification.permission !== "granted") {
-      Notification.requestPermission();
-    }
-  }, []);
+
+
 
   useEffect(() => {
     const savedRecords = localStorage.getItem("records");
@@ -184,11 +189,7 @@ const App = () => {
     };
   }, [records, hasRecovered, activeTime, inactiveTime, startTime, activity, isTracking, isPaused, isActive]);
 
-  const playAlertSound = () => {
-    const audio = new Audio("/sounds/alert.mp3");
-    audio.play();
-  };
-
+  
   const handleStart = () => {
     setShowComboBox(true);
   };
@@ -225,7 +226,7 @@ const App = () => {
     });
   
     let userComment = prompt("¿Qué comentario deseas guardar?");
-    while (userComment === null || userComment.trim() === "" || /[^a-zA-Z\s]/.test(userComment) || userComment.length > 40) {
+    while (userComment === null || userComment.trim() === "" || userComment.length > 70) {
       if (userComment === null) {
         // Si el usuario cancela, reanudar el tiempo
         setIsActive(true);
@@ -584,6 +585,7 @@ const App = () => {
                   startComposturaTimer();
                 }}
                 className="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600"
+                disabled={!isTracking} // Deshabilitar el botón si no hay una actividad en curso
               >
                 Registrar Defecto
               </button>

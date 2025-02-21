@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import jsPDF from "jspdf"; // Importar jsPDF para generar PDF
 import { saveAs } from "file-saver"; // Importar file-saver para guardar archivos
+import html2canvas from "html2canvas"; // Importar html2canvas para capturar la tabla
 
 const Defectos = ({ onClose, activity }) => {
   const [defectos, setDefectos] = useState(() => {
@@ -17,6 +18,7 @@ const Defectos = ({ onClose, activity }) => {
     removido: "",
     tiempoCompostura: "0:00",
     descripcion: "",
+    defectoArreglado: "", // Nuevo campo para defecto arreglado
   });
 
   const [composturaTime, setComposturaTime] = useState(0);
@@ -63,6 +65,25 @@ const Defectos = ({ onClose, activity }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validaciones
+    if (!formData.tipo) {
+      alert("Por favor, selecciona un tipo de defecto.");
+      return;
+    }
+    if (!formData.removido) {
+      alert("Por favor, selecciona una actividad en el campo 'Removido'.");
+      return;
+    }
+    if (!formData.defectoArreglado) {
+      alert("Por favor, selecciona si el defecto fue arreglado.");
+      return;
+    }
+    if (!formData.descripcion.trim()) {
+      alert("Por favor, proporciona una descripción del defecto.");
+      return;
+    }
+
     const updatedDefectos = [...defectos, formData];
     setDefectos(updatedDefectos);
     localStorage.setItem("defectos", JSON.stringify(updatedDefectos)); // Guardar en localStorage
@@ -74,6 +95,7 @@ const Defectos = ({ onClose, activity }) => {
       removido: "",
       tiempoCompostura: "0:00",
       descripcion: "",
+      defectoArreglado: "", // Restablecer el campo defecto arreglado
     });
     setComposturaTime(0); // Reiniciar el temporizador
     onClose(); // Cerrar el componente al guardar
@@ -85,28 +107,48 @@ const Defectos = ({ onClose, activity }) => {
   };
 
   const handleSavePDF = () => {
+    const fileName = prompt("¿Cómo deseas nombrar el archivo PDF?");
+    if (!fileName) {
+      return; // Si el usuario cancela, salir de la función
+    }
+    const studentName = prompt("Nombre del estudiante:");
+    if (!studentName) {
+      return; // Si el usuario cancela, salir de la función
+    }
+    const instructorName = prompt("Nombre del instructor:");
+    if (!instructorName) {
+      return; // Si el usuario cancela, salir de la función
+    }
+    const programName = prompt("Nombre del programa:");
+    if (!programName) {
+      return; // Si el usuario cancela, salir de la función
+    }
+
     const doc = new jsPDF();
-    doc.text("Registros de Defectos", 10, 10);
-    let y = 20;
-    defectos.forEach((defecto, index) => {
-      doc.text(`Defecto ${index + 1}`, 10, y);
-      doc.text(`Fecha: ${defecto.fecha}`, 10, y + 10);
-      doc.text(`Número: ${defecto.numero}`, 10, y + 20);
-      doc.text(`Tipo: ${defecto.tipo}`, 10, y + 30);
-      doc.text(`Encontrado: ${defecto.encontrado}`, 10, y + 40);
-      doc.text(`Removido: ${defecto.removido}`, 10, y + 50);
-      doc.text(`Tiempo de Compostura: ${defecto.tiempoCompostura}`, 10, y + 60);
-      doc.text(`Descripción: ${defecto.descripcion}`, 10, y + 70);
-      y += 80;
+    const currentDate = new Date().toLocaleDateString();
+
+    doc.text(`Registros de Defectos: ${fileName}`, 10, 10);
+    doc.text(`Estudiante: ${studentName}`, 10, 20);
+    doc.text(`Instructor: ${instructorName}`, 10, 30);
+    doc.text(`Fecha: ${currentDate}`, 10, 40);
+    doc.text(`Programa #: ${programName}`, 10, 50);
+
+    const tableElement = document.getElementById("defectos-table");
+
+    html2canvas(tableElement, { useCORS: true, logging: false, backgroundColor: null }).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      doc.addImage(imgData, "PNG", 10, 60, 190, 0);
+      doc.save(`Detecciondeerror_${fileName}.pdf`);
+    }).catch((error) => {
+      console.error("Error generating PDF:", error);
     });
-    doc.save("defectos.pdf");
   };
 
   const handleSaveFile = () => {
     const fileName = prompt("¿Cómo deseas nombrar el archivo JSON?");
     if (fileName) {
       const blob = new Blob([JSON.stringify(defectos, null, 2)], { type: "application/json" });
-      saveAs(blob, `${fileName}.json`);
+      saveAs(blob, `Detecciondeerror_${fileName}.json`);
     }
   };
 
@@ -250,6 +292,22 @@ const Defectos = ({ onClose, activity }) => {
                   readOnly
                 />
               </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="defectoArreglado">
+                  Defecto Arreglado
+                </label>
+                <select
+                  id="defectoArreglado"
+                  name="defectoArreglado"
+                  value={formData.defectoArreglado}
+                  onChange={handleChange}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                >
+                  <option value="">Seleccionar opción</option>
+                  <option value="si">Sí</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
               <div className="col-span-2">
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="descripcion">
                   Descripción
@@ -317,10 +375,10 @@ const Defectos = ({ onClose, activity }) => {
             </label>
           </div>
         </div>
-        <div className="mt-6 bg-green-100 p-4 rounded-lg overflow-y-auto">
+        <div className="mt-6 bg-green-100 p-4 rounded-lg overflow-x-auto">
           <h3 className="text-xl font-bold text-green-500 mb-4">Registros de Defectos</h3>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-full table-auto text-black border-collapse">
+            <table id="defectos-table" className="w-full min-w-full table-auto text-black border-collapse">
               <thead>
                 <tr>
                   <th className="px-4 py-2 border">Fecha</th>
@@ -329,6 +387,7 @@ const Defectos = ({ onClose, activity }) => {
                   <th className="px-4 py-2 border">Encontrado</th>
                   <th className="px-4 py-2 border">Removido</th>
                   <th className="px-4 py-2 border">Tiempo de Compostura</th>
+                  <th className="px-4 py-2 border">Defecto Arreglado</th>
                   <th className="px-4 py-2 border">Descripción</th>
                 </tr>
               </thead>
@@ -341,6 +400,7 @@ const Defectos = ({ onClose, activity }) => {
                     <td className="border px-4 py-2">{defecto.encontrado}</td>
                     <td className="border px-4 py-2">{defecto.removido}</td>
                     <td className="border px-4 py-2">{defecto.tiempoCompostura}</td>
+                    <td className="border px-4 py-2">{defecto.defectoArreglado}</td>
                     <td className="border px-4 py-2 whitespace-pre-line">{defecto.descripcion}</td>
                   </tr>
                 ))}
